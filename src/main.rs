@@ -1,8 +1,7 @@
-use std::fmt::write;
-
 use anyhow::anyhow;
 
-mod day1;
+mod day01;
+mod utils;
 
 fn main() -> anyhow::Result<()> {
     let day: u16 = std::env::args()
@@ -10,8 +9,10 @@ fn main() -> anyhow::Result<()> {
         .ok_or(anyhow!("Missing day"))?
         .parse()?;
 
+    let example = std::env::args().nth(2).unwrap_or_default() == "e";
+
     match day {
-        1 => day1::run()?,
+        1 => day01::run(example)?,
         _ => return Err(anyhow!("Unknown day")),
     }
 
