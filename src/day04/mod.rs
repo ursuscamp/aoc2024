@@ -15,7 +15,11 @@ fn p1(input: &str) {
     println!("P1: {count:?}");
 }
 
-fn p2(input: &str) {}
+fn p2(input: &str) {
+    let input = parse_input(input);
+    let count = find_x_mas_count(&input);
+    println!("P2: {count:?}");
+}
 
 fn parse_input(input: &str) -> Vec<Vec<char>> {
     input
@@ -86,6 +90,15 @@ impl Coord {
         }
         set
     }
+
+    fn x_search_set(&self) -> Option<Vec<XCoordSet>> {
+        let a = XCoordSet(*self, self.offset_diag_down(1), self.offset_diag_down(2));
+        let b = Some(self.offset_vert(2))
+            .and_then(|m| Some((m, m.offset_diag_up(1)?)))
+            .and_then(|(m, a)| Some((m, a, a.offset_diag_up(1)?)))
+            .map(|s| XCoordSet(s.0, s.1, s.2))?;
+        Some(vec![a, b])
+    }
 }
 
 #[derive(Debug, Clone, Copy, Hash)]
@@ -98,6 +111,18 @@ impl CoordSet {
         let a = self.2.in_input(input)?;
         let s = self.3.in_input(input)?;
         Some((x, m, a, s))
+    }
+}
+
+#[derive(Debug, Clone, Copy, Hash)]
+struct XCoordSet(Coord, Coord, Coord);
+
+impl XCoordSet {
+    fn in_input(&self, input: &Vec<Vec<char>>) -> Option<(char, char, char)> {
+        let m = self.0.in_input(input)?;
+        let a = self.1.in_input(input)?;
+        let s = self.2.in_input(input)?;
+        Some((m, a, s))
     }
 }
 
@@ -126,6 +151,30 @@ fn find_xmas_count(input: &Vec<Vec<char>>) -> usize {
     }
     print_board(&elim_board);
 
+    count
+}
+
+fn find_x_mas_count(input: &Vec<Vec<char>>) -> usize {
+    let mut count = 0;
+
+    for y in 0..input.len() {
+        for x in 0..input[0].len() {
+            let coord = Coord::new(x, y);
+            let sets = match coord.x_search_set() {
+                Some(sets) => sets,
+                None => continue,
+            };
+
+            let all = sets.into_iter().all(|set| {
+                let word = set.in_input(input);
+                matches!(word, Some(('M', 'A', 'S') | ('S', 'A', 'M')))
+            });
+
+            if all {
+                count += 1;
+            }
+        }
+    }
     count
 }
 
