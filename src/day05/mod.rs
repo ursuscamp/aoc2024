@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    sync::Arc,
-};
+use std::collections::{HashMap, HashSet};
 
 use crate::utils::input;
 
@@ -27,7 +24,18 @@ fn p1(input: &str) {
     println!("P1: {sum}");
 }
 
-fn p2(input: &str) {}
+fn p2(input: &str) {
+    let (sorter, updates) = parse(input);
+    let mut sum = 0;
+    for (idx, update) in updates.iter().enumerate() {
+        let sorted = sorter.sort(update);
+        if update.ne(&sorted) {
+            let midpoint = sorted.len() / 2;
+            sum += sorted[midpoint];
+        }
+    }
+    println!("P2: {sum}");
+}
 
 fn parse(input: &str) -> (Sorter, Vec<Vec<i64>>) {
     let mut pairs: HashMap<i64, HashSet<i64>> = HashMap::new();
