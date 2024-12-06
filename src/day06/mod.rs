@@ -14,15 +14,46 @@ pub fn run(example: bool) -> anyhow::Result<()> {
 fn p1(input: &str) {
     let (board, mut player) = parse(input);
     let mut cs = HashSet::new();
-    cs.insert(player.coord);
+    cs.insert(player);
     while let Some(next_player) = player.next(&board) {
-        cs.insert(next_player.coord);
+        cs.insert(next_player);
         player = next_player;
     }
-    println!("P1: {}", cs.len());
+    let coords = cs.into_iter().map(|p| p.coord).collect::<HashSet<_>>();
+    println!("P1: {}", coords.len());
 }
 
-fn p2(input: &str) {}
+fn p2(input: &str) {
+    let (board, init_player) = parse(input);
+    let mut os: HashSet<Coord> = HashSet::new();
+    for (y, line) in board.iter().enumerate() {
+        for (x, ch) in line.iter().copied().enumerate() {
+            let c = Coord { x, y };
+            let nc = c.from_board(&board);
+
+            // If the current spot is empty, then it's a possible spot for a new obstruction
+            if matches!(Some('.'), nc) {
+                // Create a new board where the current spot is an obstruction
+                let mut board = board.clone();
+                board[y][x] = '#';
+                let mut player = init_player;
+                let mut cs = HashSet::new();
+                cs.insert(player);
+                while let Some(next_player) = player.next(&board) {
+                    // If the current player and direction has already been visited, then we are in
+                    // a loop and can mark this spot as valid, then stop
+                    if cs.contains(&next_player) {
+                        os.insert(c);
+                        break;
+                    }
+                    cs.insert(next_player);
+                    player = next_player;
+                }
+            }
+        }
+    }
+    println!("P2: {}", os.len());
+}
 
 #[derive(Debug, Clone, PartialEq, Hash, Default, Copy, Eq)]
 pub struct Coord {
