@@ -12,21 +12,16 @@ pub fn run(example: bool) -> anyhow::Result<()> {
 }
 
 fn p1(input: &str) {
-    let mut total: u64 = 0;
     let equations = parse(input);
-    for equation in equations {
-        for solution in equation.potential_solutions() {
-            let result = solve_solution(&solution);
-            if result == equation.result {
-                total += result;
-                break;
-            }
-        }
-    }
+    let total = solve_all_solution(&equations, false);
     println!("P1: {total}");
 }
 
-fn p2(input: &str) {}
+fn p2(input: &str) {
+    let equations = parse(input);
+    let total = solve_all_solution(&equations, true);
+    println!("P2: {total}");
+}
 
 fn parse(input: &str) -> Vec<Equation> {
     input.lines().map(Equation::parse).collect()
@@ -53,9 +48,9 @@ impl Equation {
         self.nums.len() - 1
     }
 
-    fn potential_solutions(&self) -> Vec<Vec<EqPart>> {
+    fn potential_solutions(&self, with_concat: bool) -> Vec<Vec<EqPart>> {
         let mut v: Vec<Vec<EqPart>> = Vec::new();
-        for ops in Ops::permutations(self.op_count()) {
+        for ops in Ops::permutations(self.op_count(), with_concat) {
             v.push(
                 self.nums
                     .iter()
@@ -73,15 +68,28 @@ impl Equation {
 enum Ops {
     Add,
     Mult,
+    Concat,
 }
 
 impl Ops {
-    fn all() -> impl Iterator<Item = Ops> + Clone {
+    fn all_without_concat() -> impl Iterator<Item = Ops> + Clone {
         [Ops::Add, Ops::Mult].into_iter()
     }
 
-    fn permutations(count: usize) -> impl Iterator<Item = Vec<Ops>> {
-        repeat_n(Ops::all(), count).multi_cartesian_product()
+    fn all() -> impl Iterator<Item = Ops> + Clone {
+        [Ops::Add, Ops::Mult, Ops::Concat].into_iter()
+    }
+
+    fn permutations(count: usize, with_concat: bool) -> Vec<Vec<Ops>> {
+        if with_concat {
+            repeat_n(Ops::all(), count)
+                .multi_cartesian_product()
+                .collect()
+        } else {
+            repeat_n(Ops::all_without_concat(), count)
+                .multi_cartesian_product()
+                .collect()
+        }
     }
 }
 
@@ -107,9 +115,29 @@ fn solve_solution(solution: &Vec<EqPart>) -> u64 {
                 val *= n;
                 op = None;
             }
-            (Some(_), EqPart::Op(ops)) => unimplemented!(),
+            (Some(Ops::Concat), EqPart::Num(n)) => {
+                let mut next = val.to_string();
+                next += n.to_string().as_str();
+                val = next.parse().unwrap();
+                op = None;
+            }
+            (Some(_), EqPart::Op(_ops)) => unimplemented!(),
         }
     }
 
     val
+}
+
+fn solve_all_solution(equations: &Vec<Equation>, with_concat: bool) -> u64 {
+    let mut total: u64 = 0;
+    for equation in equations {
+        for solution in equation.potential_solutions(with_concat) {
+            let result = solve_solution(&solution);
+            if result == equation.result {
+                total += result;
+                break;
+            }
+        }
+    }
+    total
 }
