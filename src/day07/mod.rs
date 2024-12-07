@@ -55,8 +55,8 @@ impl Equation {
                 self.nums
                     .iter()
                     .copied()
-                    .map(|n| EqPart::Num(n))
-                    .interleave(ops.into_iter().map(|o| EqPart::Op(o)))
+                    .map(EqPart::Num)
+                    .interleave(ops.into_iter().map(EqPart::Op))
                     .collect(),
             );
         }

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+#![allow(clippy::all)]
 use crate::utils::input;
 
 pub fn run(example: bool) -> anyhow::Result<()> {

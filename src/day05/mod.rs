@@ -1,3 +1,4 @@
+#![allow(clippy::all)]
 use std::collections::{HashMap, HashSet};
 
 use crate::utils::input;
@@ -14,7 +15,7 @@ pub fn run(example: bool) -> anyhow::Result<()> {
 fn p1(input: &str) {
     let (sorter, updates) = parse(input);
     let mut sum = 0;
-    for (idx, update) in updates.iter().enumerate() {
+    for (_idx, update) in updates.iter().enumerate() {
         let sorted = sorter.sort(update);
         if update.eq(&sorted) {
             let midpoint = update.len() / 2;
@@ -27,7 +28,7 @@ fn p1(input: &str) {
 fn p2(input: &str) {
     let (sorter, updates) = parse(input);
     let mut sum = 0;
-    for (idx, update) in updates.iter().enumerate() {
+    for (_idx, update) in updates.iter().enumerate() {
         let sorted = sorter.sort(update);
         if update.ne(&sorted) {
             let midpoint = sorted.len() / 2;

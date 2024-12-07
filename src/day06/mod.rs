@@ -1,3 +1,5 @@
+#![allow(clippy::all)]
+#![allow(unused_variables)]
 use std::collections::HashSet;
 
 use crate::utils::input;
@@ -27,7 +29,7 @@ fn p2(input: &str) {
     let (board, init_player) = parse(input);
     let mut os: HashSet<Coord> = HashSet::new();
     for (y, line) in board.iter().enumerate() {
-        for (x, ch) in line.iter().copied().enumerate() {
+        for (x, _) in line.iter().copied().enumerate() {
             let c = Coord { x, y };
             let nc = c.from_board(&board);
 
@@ -155,13 +157,4 @@ fn parse(input: &str) -> (Vec<Vec<char>>, Player) {
         board.push(lv);
     }
     (board, player)
-}
-
-fn print_board(board: &Vec<Vec<char>>) {
-    for line in board {
-        for ch in line {
-            print!("{ch}");
-        }
-        println!("");
-    }
 }

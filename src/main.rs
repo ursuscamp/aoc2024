@@ -25,7 +25,6 @@ fn main() -> anyhow::Result<()> {
         5 => day05::run(example)?,
         6 => day06::run(example)?,
         7 => day07::run(example)?,
-        7 => day07::run(example)?,
         _ => return Err(anyhow!("Unknown day")),
     }
 
