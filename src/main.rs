@@ -8,6 +8,7 @@ mod day05;
 mod day06;
 mod day07;
 mod day08;
+mod day09;
 mod utils;
 
 fn main() -> anyhow::Result<()> {
@@ -27,6 +28,7 @@ fn main() -> anyhow::Result<()> {
         6 => day06::run(example)?,
         7 => day07::run(example)?,
         8 => day08::run(example)?,
+        9 => day09::run(example)?,
         _ => return Err(anyhow!("Unknown day")),
     }
 
