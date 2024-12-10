@@ -22,7 +22,16 @@ fn p1(input: &str) {
     println!("P1: {result:#?}");
 }
 
-fn p2(input: &str) {}
+fn p2(input: &str) {
+    let board = Board(parse(input));
+    let result: usize = board
+        .trailheads()
+        .into_iter()
+        .map(|th| board.find_trails(&th))
+        .map(|trails| trails.len())
+        .sum();
+    println!("P2: {result:#?}");
+}
 
 fn parse(input: &str) -> Vec<Vec<u32>> {
     input
