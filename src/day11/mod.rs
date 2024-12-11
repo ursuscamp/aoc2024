@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::utils::input;
 
 pub fn run(example: bool) -> anyhow::Result<()> {
@@ -11,49 +13,67 @@ pub fn run(example: bool) -> anyhow::Result<()> {
 
 fn p1(input: &str) {
     let nums = parse(input);
-    let result = process_times(nums, 25).len();
+    let mut cache = HashMap::new();
+    let result = nums
+        .into_iter()
+        .map(|n| process_stone(n, 25, &mut cache))
+        .sum::<usize>();
     println!("P1: {result:?}");
 }
 
-fn p2(input: &str) {}
-
-fn parse(input: &str) -> Vec<String> {
-    input.split_whitespace().map(ToString::to_string).collect()
+fn p2(input: &str) {
+    let nums = parse(input);
+    let mut cache = HashMap::new();
+    let result = nums
+        .into_iter()
+        .map(|n| process_stone(n, 75, &mut cache))
+        .sum::<usize>();
+    println!("P2: {result:?}");
 }
 
-fn process_times(nums: Vec<String>, times: usize) -> Vec<String> {
-    if times == 0 {
-        return nums;
+fn parse(input: &str) -> Vec<u64> {
+    input
+        .split_whitespace()
+        .map(|n| n.parse().unwrap())
+        .collect()
+}
+
+fn process_stone(stone: u64, blinks: usize, cache: &mut HashMap<(u64, usize), usize>) -> usize {
+    // Recursive base case
+    if blinks == 0 {
+        return 1;
     }
 
-    let mut nums = nums;
-    for _ in 0..times {
-        nums = process(nums).collect();
+    if let Some(val) = cache.get(&(stone, blinks)) {
+        return *val;
     }
 
-    nums
+    let val = if stone == 0 {
+        process_stone(1, blinks - 1, cache)
+    } else if count_digits(stone) % 2 == 0 {
+        let (left, right) = split_number(stone);
+        process_stone(left, blinks - 1, cache) + process_stone(right, blinks - 1, cache)
+    } else {
+        process_stone(stone * 2024, blinks - 1, cache)
+    };
+    cache.insert((stone, blinks), val);
+    val
 }
 
-fn process(nums: Vec<String>) -> impl Iterator<Item = String> {
-    nums.into_iter().flat_map(process_num)
-}
-
-fn process_num(num: String) -> impl Iterator<Item = String> {
-    match num.as_str() {
-        "" | "0" => [None, Some(String::from("1"))],
-        _ if num.len() % 2 == 0 => split_even(num),
-        _ => {
-            let n = num.parse::<u64>().unwrap() * 2024u64;
-            [None, Some(n.to_string())]
-        }
+fn count_digits(num: u64) -> u32 {
+    if num == 0 {
+        return 1;
     }
-    .into_iter()
-    .flatten()
+
+    num.ilog10() + 1
 }
 
-fn split_even(num: String) -> [Option<String>; 2] {
-    let len = num.len() / 2;
-    let l = num[..len].trim_start_matches('0').to_string();
-    let r = num[len..].trim_start_matches('0').to_string();
-    [Some(l), Some(r)]
+fn split_number(num: u64) -> (u64, u64) {
+    let digit_count = count_digits(num);
+    let half_digit_count = digit_count / 2;
+
+    let left_half = num / 10u64.pow(half_digit_count);
+    let right_half = num % 10u64.pow(half_digit_count);
+
+    (left_half, right_half)
 }

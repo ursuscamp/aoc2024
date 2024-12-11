@@ -162,6 +162,7 @@ fn is_on_board(board: &[Vec<char>], x: isize, y: isize) -> bool {
     y < board.len() && x < board[0].len()
 }
 
+#[allow(clippy::comparison_chain)]
 fn flip_sign(n: isize) -> isize {
     if n < 0 {
         n.abs()
