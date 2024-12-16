@@ -9,13 +9,14 @@ mod day06;
 mod day07;
 mod day08;
 mod day09;
-mod utils;
 mod day10;
 mod day11;
 mod day12;
 mod day13;
 mod day14;
 mod day15;
+mod day16;
+mod utils;
 
 fn main() -> anyhow::Result<()> {
     let day: u16 = std::env::args()
@@ -41,6 +42,7 @@ fn main() -> anyhow::Result<()> {
         13 => day13::run(example)?,
         14 => day14::run(example)?,
         15 => day15::run(example)?,
+        16 => day16::run(example)?,
         _ => return Err(anyhow!("Unknown day")),
     }
 
