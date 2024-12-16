@@ -18,7 +18,7 @@ pub fn run(example: bool) -> anyhow::Result<()> {
 fn p1(input: &str) {
     let values = parse(input);
     let values = process_values(values.into_iter(), 100)
-        .flat_map(|pair| as_quadrant(pair))
+        .flat_map(as_quadrant)
         .counts()
         .values()
         .fold(1, |acc, value| *value * acc);
@@ -30,7 +30,7 @@ fn p2(input: &str) {
     for i in 0..10_000 {
         values = process_values(values.iter().copied(), 1)
             .zip(values.iter())
-            .map(|(np, (op, ov))| (np, *ov))
+            .map(|(np, (_op, ov))| (np, *ov))
             .collect_vec();
         if possible_tree(&values) {
             println!("==== {} possible tree", i + 1);
