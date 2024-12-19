@@ -7,7 +7,7 @@ pub fn input(day: u16, example: bool) -> anyhow::Result<String> {
     Ok(std::fs::read_to_string(&fname)?)
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, Hash)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, Hash, PartialOrd, Ord)]
 pub struct Vec2 {
     pub x: isize,
     pub y: isize,
@@ -72,4 +72,12 @@ impl std::ops::Sub for Vec2 {
             y: self.y - rhs.y,
         }
     }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+pub enum Dir {
+    North,
+    South,
+    East,
+    West,
 }
