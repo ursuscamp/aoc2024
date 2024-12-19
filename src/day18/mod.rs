@@ -1,7 +1,4 @@
-use std::{
-    cmp::Reverse,
-    collections::{BinaryHeap, HashMap, HashSet},
-};
+use std::collections::{HashMap, HashSet};
 
 use itertools::Itertools;
 
@@ -19,12 +16,27 @@ pub fn run(example: bool) -> anyhow::Result<()> {
 fn p1(input: &str) {
     let memory = Memory::parse(input);
     let ticks = if memory.size == 70 { 1024 } else { 12 };
-    let min_cost = memory.find_path_nonrec(ticks);
-    // let min_cost = memory.find_path(ticks);
+    let min_cost = memory.find_path(ticks);
     println!("P1: {}", min_cost.unwrap());
 }
 
-fn p2(input: &str) {}
+fn p2(input: &str) {
+    let memory = Memory::parse(input);
+    let tick_idx = memory
+        .bytes
+        .iter()
+        .copied()
+        .enumerate()
+        .rev()
+        .find_map(|(tick_idx, _node)| {
+            let ticks = tick_idx + 1;
+            memory.find_path(ticks).and(Some(tick_idx + 1))
+        })
+        .unwrap();
+    let node = memory.bytes[tick_idx];
+    let tick = format!("{},{}", node.x, node.y);
+    println!("P2: {tick}");
+}
 
 #[derive(Debug)]
 struct Memory {
@@ -33,61 +45,8 @@ struct Memory {
 }
 
 impl Memory {
-    fn find_path(&self, ticks: usize) -> usize {
+    fn find_path(&self, ticks: usize) -> Option<usize> {
         let bad_bytes: HashSet<Vec2> = self.tick(ticks).iter().copied().collect();
-        let mut visited = HashSet::new();
-        self._find_path(&bad_bytes, usize::MAX, Vec2 { x: 0, y: 0 }, &mut visited)
-            .unwrap();
-        visited.len() - 1
-    }
-
-    fn _find_path(
-        &self,
-        bad_bytes: &HashSet<Vec2>,
-        cost: usize,
-        node: Vec2,
-        visited: &mut HashSet<Vec2>,
-    ) -> Option<usize> {
-        visited.insert(node);
-
-        if node == self.end() {
-            println!("End found: {cost}");
-            return Some(cost);
-        }
-
-        let next = [node.right(), node.down(), node.up(), node.left()]
-            .into_iter()
-            .filter_map(|nn| {
-                if nn.x < 0
-                    || nn.y < 0
-                    || nn.x > self.size
-                    || nn.y > self.size
-                    || bad_bytes.contains(&nn)
-                    || visited.contains(&nn)
-                {
-                    return None;
-                }
-                self._find_path(bad_bytes, cost + 1, nn, visited)
-            })
-            .min();
-
-        if next.is_none() {
-            visited.remove(&node);
-        }
-
-        next
-    }
-
-    fn end(&self) -> Vec2 {
-        Vec2 {
-            x: self.size,
-            y: self.size,
-        }
-    }
-
-    fn find_path_nonrec(&self, ticks: usize) -> Option<usize> {
-        let bad_bytes: HashSet<Vec2> = self.tick(ticks).iter().copied().collect();
-        // let mut queue = BinaryHeap::from([(0usize, Vec2 { x: 0, y: 0 })]);
         let mut queue = Vec::from([(0usize, Vec2 { x: 0, y: 0 }, Dir::North)]);
         let end = Vec2 {
             x: self.size,
@@ -155,6 +114,7 @@ impl Memory {
         Memory { size, bytes }
     }
 
+    #[allow(dead_code)]
     fn debug_print(&self, ticks: usize) {
         let c: HashSet<Vec2> = self.tick(ticks).iter().copied().collect();
         for y in 0..=self.size {
