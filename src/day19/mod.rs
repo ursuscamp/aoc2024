@@ -1,7 +1,4 @@
-use std::{
-    cmp::Reverse,
-    collections::{HashSet, VecDeque},
-};
+use std::{cmp::Reverse, collections::HashMap};
 
 use itertools::Itertools;
 
@@ -19,63 +16,48 @@ pub fn run(example: bool) -> anyhow::Result<()> {
 fn p1(input: &str) {
     let (towels, designs) = parse(input);
 
+    let mut cache = HashMap::new();
     let matches = designs
         .into_iter()
-        .filter(|d| check_design(d, &towels))
+        .filter(|d| count_combinations(d, &towels, &mut cache) > 0)
         .count();
     println!("P1: {matches}");
 }
 
-fn p2(input: &str) {}
+fn p2(input: &str) {
+    let (towels, designs) = parse(input);
 
-fn check_design(design: &str, towels: &Vec<String>) -> bool {
-    let mut left = VecDeque::new();
-    let mut right = VecDeque::new();
-    let mut buffer = design.to_string();
+    let mut cache = HashMap::new();
+    let sum: usize = designs
+        .into_iter()
+        .map(|design| count_combinations(&design, &towels, &mut cache))
+        .sum();
+    println!("P2: {sum}");
+}
 
-    loop {
-        let mut match_found = false;
-        for towel in towels {
-            if buffer.starts_with(towel) {
-                match_found = true;
-                left.push_back(towel.as_str());
-                buffer.replace_range(..towel.len(), "");
-                break;
-            }
-        }
-        if !match_found {
-            break;
-        }
+fn count_combinations(
+    design: &str,
+    towels: &Vec<String>,
+    cache: &mut HashMap<String, usize>,
+) -> usize {
+    if design.is_empty() {
+        return 1;
     }
 
-    if buffer.is_empty() {
-        return true;
+    if let Some(answer) = cache.get(design) {
+        return *answer;
     }
 
-    loop {
-        let mut match_found = false;
-        for towel in towels {
-            if buffer.ends_with(towel) {
-                match_found = true;
-                right.push_front(towel.as_str());
-                let idx = buffer.len() - towel.len();
-                buffer.replace_range(idx.., "");
-                break;
-            }
-        }
-        if !match_found {
-            match left.pop_back() {
-                Some(piece) => buffer.insert_str(0, piece),
-                None => break,
-            }
+    let mut count = 0;
+    for towel in towels {
+        if design.starts_with(towel) {
+            count += count_combinations(&design[towel.len()..], towels, cache);
         }
     }
 
-    if buffer.is_empty() {
-        return true;
-    }
+    cache.insert(design.to_string(), count);
 
-    false
+    count
 }
 
 fn parse(input: &str) -> (Vec<String>, Vec<String>) {
