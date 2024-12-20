@@ -14,6 +14,14 @@ pub struct Vec2 {
 }
 
 impl Vec2 {
+    pub fn neighbors(&self) -> [Vec2; 4] {
+        [self.up(), self.right(), self.down(), self.left()]
+    }
+
+    pub fn manhattan_distance(&self, other: &Vec2) -> usize {
+        self.x.abs_diff(other.x) + self.y.abs_diff(other.y)
+    }
+
     pub fn right(&self) -> Vec2 {
         Vec2 {
             x: self.x + 1,
