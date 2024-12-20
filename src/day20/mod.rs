@@ -1,6 +1,8 @@
 use core::panic;
 use std::collections::{HashMap, HashSet};
 
+use itertools::Itertools;
+
 use crate::utils::{input, Vec2};
 
 pub fn run(example: bool) -> anyhow::Result<()> {
@@ -16,14 +18,23 @@ fn p1(input: &str) {
     let track = Track::parse(input);
 
     let cheats = track
-        .count_cheats()
+        .count_cheats(2)
         .into_iter()
         .filter_map(|(saving, count)| if saving >= 100 { Some(count) } else { None })
         .sum::<usize>();
     println!("P1: {cheats}");
 }
 
-fn p2(input: &str) {}
+fn p2(input: &str) {
+    let track = Track::parse(input);
+
+    let cheats = track
+        .count_cheats(20)
+        .into_iter()
+        .filter_map(|(saving, count)| if saving >= 100 { Some(count) } else { None })
+        .sum::<usize>();
+    println!("P2: {cheats}");
+}
 
 #[derive(Debug)]
 struct Track {
@@ -38,7 +49,7 @@ struct Track {
 }
 
 impl Track {
-    fn count_cheats(&self) -> HashMap<usize, usize> {
+    fn count_cheats(&self, cheat_range: usize) -> HashMap<usize, usize> {
         let mut cheats = HashMap::new();
 
         for (tile, tile_cost) in &self.track {
@@ -46,15 +57,16 @@ impl Track {
                 .track
                 .iter()
                 .filter_map(|(other_tile, other_cost)| {
-                    let savings = other_cost.saturating_sub(*tile_cost).saturating_sub(2);
-                    if savings > 0 {
-                        Some((savings, other_tile))
+                    let md = tile.manhattan_distance(other_tile);
+                    if md <= cheat_range {
+                        Some((other_tile, other_cost, md))
                     } else {
                         None
                     }
                 })
-                .filter_map(|(savings, other_tile)| {
-                    if tile.manhattan_distance(other_tile) <= 2 {
+                .filter_map(|(_other_tile, other_cost, md)| {
+                    let savings = other_cost.saturating_sub(*tile_cost).saturating_sub(md);
+                    if savings > 0 {
                         Some(savings)
                     } else {
                         None
