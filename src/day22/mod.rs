@@ -1,3 +1,7 @@
+use std::collections::{HashMap, HashSet};
+
+use itertools::Itertools;
+
 use crate::utils::input;
 
 pub fn run(example: bool) -> anyhow::Result<()> {
@@ -15,11 +19,20 @@ fn p1(input: &str) {
         .into_iter()
         .map(|secret_num| secret_num.nth(2000))
         .map(|s| s.0)
-        .sum::<u64>();
+        .sum::<i64>();
     println!("P1: {result}");
 }
 
-fn p2(input: &str) {}
+fn p2(input: &str) {
+    let input = parse(input);
+    let mut cache = HashMap::new();
+    for num in input {
+        cache_best_price_changes_for_secret_number(num, 2000, &mut cache);
+    }
+    // let sn = find_best_price_changes(&cache);
+    let sn = cache.values().max().unwrap();
+    println!("{sn:#?}")
+}
 
 fn parse(input: &str) -> Vec<SecretNum> {
     input
@@ -28,11 +41,80 @@ fn parse(input: &str) -> Vec<SecretNum> {
         .collect()
 }
 
+fn cache_best_price_changes_for_secret_number(
+    sn: SecretNum,
+    n: usize,
+    cache: &mut HashMap<(i64, i64, i64, i64), i64>,
+) {
+    let sn = secret_num_prices(sn, n);
+    let sn = secret_num_price_changes(&sn);
+    cache_quadruplet_changes(&sn, cache);
+}
+
+fn find_best_price_changes(
+    cache: &HashMap<(i64, i64, i64, i64), i64>,
+) -> Vec<(i64, i64, i64, i64)> {
+    let mut changes = Vec::new();
+    let mut max_price = 0;
+
+    for (key, price) in cache.iter() {
+        #[allow(clippy::comparison_chain)]
+        if *price > max_price {
+            max_price = *price;
+            changes.clear();
+            changes.push(*key);
+        } else if *price == max_price {
+            changes.push(*key);
+        }
+    }
+
+    changes
+}
+
+fn cache_quadruplet_changes(
+    price_changes: &[(i64, i64)],
+    cache: &mut HashMap<(i64, i64, i64, i64), i64>,
+) {
+    let mut visited = HashSet::new();
+    price_changes
+        .iter()
+        .copied()
+        .tuple_windows()
+        .for_each(|(f, s, t, fo)| {
+            let key = (f.1, s.1, t.1, fo.1);
+            // We only want to record the first time we see a quadruplet for every buyer
+            if !visited.insert(key) {
+                return;
+            }
+            *cache.entry(key).or_default() += fo.0;
+        });
+}
+
+fn secret_num_price_changes(prices: &[i64]) -> Vec<(i64, i64)> {
+    prices
+        .iter()
+        .copied()
+        .tuple_windows()
+        .map(|(f, s)| (s, s - f))
+        .collect_vec()
+}
+
+fn secret_num_prices(sn: SecretNum, n: usize) -> Vec<i64> {
+    let mut sns = Vec::from([sn.price()]);
+    sns.extend_from_slice(
+        &sn.evolutions(n)
+            .into_iter()
+            .map(|s| s.price())
+            .collect_vec(),
+    );
+    sns
+}
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
-struct SecretNum(u64);
+struct SecretNum(i64);
 
 impl SecretNum {
-    fn mix(&self, other: u64) -> SecretNum {
+    fn mix(&self, other: i64) -> SecretNum {
         SecretNum(self.0 ^ other)
     }
 
@@ -49,6 +131,26 @@ impl SecretNum {
 
     fn nth(&self, n: usize) -> SecretNum {
         (0..n).fold(*self, |acc, _| acc.evolve())
+    }
+
+    fn evolutions(&self, n: usize) -> Vec<SecretNum> {
+        (0..n)
+            .scan(*self, |acc, _| {
+                let next = acc.evolve();
+                *acc = next;
+                Some(next)
+            })
+            .collect()
+    }
+
+    fn price(&self) -> i64 {
+        self.0
+            .to_string()
+            .chars()
+            .last()
+            .unwrap()
+            .to_digit(10)
+            .unwrap() as i64
     }
 }
 
