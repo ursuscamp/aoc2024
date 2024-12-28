@@ -19,7 +19,12 @@ fn p1(input: &str) {
     println!("P1: {}", connections.len());
 }
 
-fn p2(input: &str) {}
+fn p2(input: &str) {
+    let graph = parse(input);
+    let neighbors = find_maximum_clique(&graph);
+    let password = neighbors.into_iter().sorted().join(",");
+    println!("P2: {:?}", password);
+}
 
 fn parse(input: &str) -> HashMap<String, HashSet<String>> {
     let mut map: HashMap<String, HashSet<String>> = HashMap::new();
@@ -34,6 +39,82 @@ fn parse(input: &str) -> HashMap<String, HashSet<String>> {
     }
 
     map
+}
+
+fn find_maximum_clique(graph: &HashMap<String, HashSet<String>>) -> HashSet<String> {
+    let mut max_clique: HashSet<String> = HashSet::new();
+    let mut current_clique: HashSet<String> = HashSet::new();
+
+    // Convert all nodes to a vector for easier iteration
+    let nodes: Vec<String> = graph.keys().cloned().collect();
+
+    // Helper function to check if a node can be added to current clique
+    fn is_connected_to_all(
+        node: &str,
+        clique: &HashSet<String>,
+        graph: &HashMap<String, HashSet<String>>,
+    ) -> bool {
+        if let Some(neighbors) = graph.get(node) {
+            clique
+                .iter()
+                .all(|clique_node| neighbors.contains(clique_node))
+        } else {
+            false
+        }
+    }
+
+    // Recursive function to find maximum clique
+    fn find_clique_recursive(
+        candidates: &[String],
+        current_clique: &mut HashSet<String>,
+        max_clique: &mut HashSet<String>,
+        graph: &HashMap<String, HashSet<String>>,
+    ) {
+        if candidates.is_empty() {
+            if current_clique.len() > max_clique.len() {
+                max_clique.clear();
+                max_clique.extend(current_clique.iter().cloned());
+            }
+            return;
+        }
+
+        for (i, candidate) in candidates.iter().enumerate() {
+            if current_clique.len() + (candidates.len() - i) <= max_clique.len() {
+                // Early pruning: impossible to beat max_clique
+                return;
+            }
+
+            if is_connected_to_all(candidate, current_clique, graph) {
+                // Try including this node
+                current_clique.insert(candidate.clone());
+
+                // Create new candidates list excluding current node and non-neighbors
+                let new_candidates: Vec<String> = candidates[(i + 1)..]
+                    .iter()
+                    .filter(|&node| is_connected_to_all(node, current_clique, graph))
+                    .cloned()
+                    .collect();
+
+                find_clique_recursive(&new_candidates, current_clique, max_clique, graph);
+                current_clique.remove(candidate);
+            }
+        }
+    }
+
+    find_clique_recursive(&nodes, &mut current_clique, &mut max_clique, graph);
+    max_clique
+}
+
+// Helper function to create an undirected edge
+fn add_undirected_edge(graph: &mut HashMap<String, HashSet<String>>, node1: &str, node2: &str) {
+    graph
+        .entry(node1.to_string())
+        .or_insert_with(HashSet::new)
+        .insert(node2.to_string());
+    graph
+        .entry(node2.to_string())
+        .or_insert_with(HashSet::new)
+        .insert(node1.to_string());
 }
 
 fn interconnected_computers(
@@ -58,21 +139,23 @@ fn unique(items: Vec<Vec<&String>>) -> Vec<Vec<&String>> {
 }
 
 fn find_connections(num: usize, graph: &HashMap<String, HashSet<String>>) -> Vec<Vec<&String>> {
-    let mut results = graph.keys().combinations(num).collect_vec();
-
-    results.retain(|r| {
-        for i in 0..r.len() {
-            for j in 0..r.len() {
-                if i == j {
-                    continue;
-                }
-                if !graph[r[i]].contains(r[j]) {
-                    return false;
+    let results = graph
+        .keys()
+        .combinations(num)
+        .filter(|r| {
+            for i in 0..r.len() {
+                for j in 0..r.len() {
+                    if i == j {
+                        continue;
+                    }
+                    if !graph[r[i]].contains(r[j]) {
+                        return false;
+                    }
                 }
             }
-        }
-        true
-    });
+            true
+        })
+        .collect_vec();
 
     results
 }
