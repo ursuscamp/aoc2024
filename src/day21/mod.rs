@@ -44,7 +44,7 @@ fn p1(input: &str) {
     println!("P1: {result}");
 }
 
-fn p2(input: &str) {}
+fn p2(_input: &str) {}
 
 fn find_shortest_paths(
     keypad: &[[u8; 3]],

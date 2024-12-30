@@ -105,18 +105,6 @@ fn find_maximum_clique(graph: &HashMap<String, HashSet<String>>) -> HashSet<Stri
     max_clique
 }
 
-// Helper function to create an undirected edge
-fn add_undirected_edge(graph: &mut HashMap<String, HashSet<String>>, node1: &str, node2: &str) {
-    graph
-        .entry(node1.to_string())
-        .or_insert_with(HashSet::new)
-        .insert(node2.to_string());
-    graph
-        .entry(node2.to_string())
-        .or_insert_with(HashSet::new)
-        .insert(node1.to_string());
-}
-
 fn interconnected_computers(
     num: usize,
     graph: &HashMap<String, HashSet<String>>,

@@ -1,8 +1,6 @@
 use core::panic;
 use std::collections::{HashMap, HashSet};
 
-use itertools::Itertools;
-
 use crate::utils::{input, Vec2};
 
 pub fn run(example: bool) -> anyhow::Result<()> {

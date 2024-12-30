@@ -51,26 +51,6 @@ fn cache_best_price_changes_for_secret_number(
     cache_quadruplet_changes(&sn, cache);
 }
 
-fn find_best_price_changes(
-    cache: &HashMap<(i64, i64, i64, i64), i64>,
-) -> Vec<(i64, i64, i64, i64)> {
-    let mut changes = Vec::new();
-    let mut max_price = 0;
-
-    for (key, price) in cache.iter() {
-        #[allow(clippy::comparison_chain)]
-        if *price > max_price {
-            max_price = *price;
-            changes.clear();
-            changes.push(*key);
-        } else if *price == max_price {
-            changes.push(*key);
-        }
-    }
-
-    changes
-}
-
 fn cache_quadruplet_changes(
     price_changes: &[(i64, i64)],
     cache: &mut HashMap<(i64, i64, i64, i64), i64>,
