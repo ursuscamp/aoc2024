@@ -16,16 +16,16 @@ pub fn run(example: bool) -> anyhow::Result<()> {
 fn p1(input: &str) {
     let mut wires = parse(input);
     execute(&mut wires);
-    let result = calc_decimal(&wires);
+    let result = calc_decimal('z', &wires);
     println!("{:#?}", result);
 }
 
 fn p2(input: &str) {}
 
-fn calc_decimal(wires: &HashMap<String, Value>) -> i64 {
+fn calc_decimal(prefix: char, wires: &HashMap<String, Value>) -> i64 {
     wires
         .keys()
-        .filter(|k| k.starts_with('z'))
+        .filter(|k| k.starts_with(prefix))
         .sorted()
         .rev()
         .map(|k| wires[k].unwarp_num())
