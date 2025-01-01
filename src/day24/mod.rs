@@ -17,10 +17,58 @@ fn p1(input: &str) {
     let mut wires = parse(input);
     execute(&mut wires);
     let result = calc_decimal('z', &wires);
-    println!("{:#?}", result);
+    println!("P1: {:#?}", result);
 }
 
-fn p2(input: &str) {}
+fn p2(input: &str) {
+    let mut wires = parse(input);
+    let mut result = swap_until(&mut wires, 4);
+    result.sort();
+    let result = result.join(",");
+    println!("P2: {:#?}", result);
+}
+
+fn swap_until(wires: &mut HashMap<String, Value>, wires_to_pair: usize) -> Vec<String> {
+    let perms = wires
+        .keys()
+        .filter(|k| !k.starts_with('x') && !k.starts_with('y'))
+        .permutations(wires_to_pair);
+    for perm in perms {
+        let mut nw = wires.clone();
+        for pair in perm.chunks(2) {
+            let (a, b) = (pair[0], pair[1]);
+            let a = a.to_string();
+            let b = b.to_string();
+            let a_val = nw.remove(&a).unwrap();
+            let b_val = nw.remove(&b).unwrap();
+            nw.insert(a, b_val);
+            nw.insert(b, a_val);
+        }
+        execute(&mut nw);
+        if perm.iter().cloned().collect_vec() == ["z00", "z05", "z02", "z01"] {
+            println!("Checking: {:#?}", wires);
+            println!("Checking: {:#?}", perm);
+            let x = calc_decimal('x', wires);
+            let y = calc_decimal('y', wires);
+            let z = calc_decimal('z', wires);
+            println!("x: {:#?}", x);
+            println!("y: {:#?}", y);
+            println!("z: {:#?}", z);
+        }
+
+        if check_result(&nw) {
+            return perm.into_iter().cloned().collect();
+        }
+    }
+    panic!("No solution found");
+}
+
+fn check_result(wires: &HashMap<String, Value>) -> bool {
+    let x = calc_decimal('x', wires);
+    let y = calc_decimal('y', wires);
+    let z = calc_decimal('z', wires);
+    x + y == z
+}
 
 fn calc_decimal(prefix: char, wires: &HashMap<String, Value>) -> i64 {
     wires
